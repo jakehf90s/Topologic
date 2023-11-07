@@ -36,7 +36,8 @@ cd Topologic
 git submodule update --init
 ```
 2. Create the Conda-based build environment for the target Python version: the files `conda_env_topologic_*.yml` where `*` is `py310`, `py311`, etc. for Python 3.10, 3.11, etc. define Conda environments named `topologic_py310`, `topologic_py311`, etc. that contain the build dependencies, notably OpenCASCADE, and build tools.  
-As of 20221217, Blender comes with Python 3.10; the following instructions are for this version.  
+As of 20221217, Blender comes with Python 3.10; the following instructions are for this version.
+(If you have build errors with permissions problem, change anaconda path ownership(e.g. sudo chown -R $USER ~/.conda)
 ```
 conda env create -f conda_env_topologic_py310.yml
 ```  
@@ -45,6 +46,10 @@ b
 3. Activate the Conda environment:
 ```
 conda activate topologic_py310
+```
+if it says invalid arg "activate"(common conda problem), use:
+```
+source activate topologic_py310
 ```
 
 4. To build TopologicCore separately, if needed:
@@ -76,11 +81,26 @@ The build output is a Python wheel that contains the extension module with Topol
 ### A note on MacOS build
 Libraries in MacOS can be shared or static. Static are the ones with .SO extension and the ones with .dylib are shared.
 
+deploy.py is included in case you encounter problems deploying to other machines, it will get all the dependencies list of the library and update the
+rpath to the current directory, and will copy those libraries to the directory where the library you give resides. This way, the built
+library will be self-contained and no longer need to use dependencies from system path.
+
+`python deploy.py /path/to/your/library.so` 
+
+testRunCaptureLibsLoaded.sh will help you trace which libraries the python script loaded at runtime, and will create a file dyld.log.
+You first need to edit the variables inside, change the path for your topologic python test file, then make it executable(chmod +x testRunCaptureLibsLoaded.sh).
+Then run it:
+
+`./testRunCaptureLibsLoaded.sh`
+
+
+
 In order to inspect the dependencies of a library you can use the tool "otool" that is available on MacOS.
 
 For example:
 
 `otool -L topologic.cpython-310-darwin.so` 
+
 
 will print 
 	@loader_path/libTKOffset.7.7.dylib (compatibility version 7.7.0, current version 7.7.0)
